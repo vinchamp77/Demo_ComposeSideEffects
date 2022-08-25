@@ -19,20 +19,28 @@ fun DemoScreen() {
     val text = remember { mutableStateOf("") }
     var startLaunchedEffect by remember { mutableStateOf(false)}
     var launchedEffectKey by remember { mutableStateOf(true)}
+    var enableRememberUpdatedStated by remember { mutableStateOf(false)}
+
 
     val scope = rememberCoroutineScope()
     var job: Job? by remember { mutableStateOf(null)}
 
     LogCompositions(tag, "DemoScreen() function scope")
 
+    if(startLaunchedEffect) {
+        LaunchedEffect(true) {
+            simulateSuspendFunction(text)
+        }
+    }
+
+    if(enableRememberUpdatedStated) {
+        RememberUpdatedStated(text.value)
+    }
+
     Column {
         TextWidget(title = "[Text]", text = text.value , tag = tag)
 
-        if(startLaunchedEffect) {
-            LaunchedEffect(launchedEffectKey) {
-                simulateSuspendFunction(text)
-            }
-        }
+
 
         Button(onClick = {
             startLaunchedEffect = true
@@ -72,6 +80,18 @@ fun DemoScreen() {
             job?.cancel()
         }) {
             Text("Stop rememberCoroutineScope")
+        }
+
+        Divider()
+
+        Button(onClick = { enableRememberUpdatedStated = true }
+        ) {
+            Text("Enable RememberUpdatedStated")
+        }
+
+        Button(onClick = { enableRememberUpdatedStated = false }
+        ) {
+            Text("Disable RememberUpdatedStated")
         }
     }
 }
