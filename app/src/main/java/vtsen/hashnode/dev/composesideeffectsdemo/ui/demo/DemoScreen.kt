@@ -21,9 +21,13 @@ fun DemoScreen() {
     var launchedEffectKey by remember { mutableStateOf(true)}
     var enableRememberUpdatedStated by remember { mutableStateOf(false)}
 
-
     val scope = rememberCoroutineScope()
     var job: Job? by remember { mutableStateOf(null)}
+
+    var startDisposableEffect by remember { mutableStateOf(false)}
+    var disposableEffectKey by remember { mutableStateOf(true)}
+
+    var startSideEffect by remember { mutableStateOf(false)}
 
     LogCompositions(tag, "DemoScreen() function scope")
 
@@ -37,10 +41,32 @@ fun DemoScreen() {
         RememberUpdatedStated(text.value)
     }
 
+    if(startDisposableEffect) {
+        DisposableEffect(disposableEffectKey) {
+
+            repeat(10 ) { value ->
+                Thread.sleep(1000)
+                Log.d("DisposableEffect", "value: $value")
+            }
+            text.value = "DisposableEffect() is called"
+            Log.d("DisposableEffect", "DisposableEffect is called")
+
+            onDispose {
+                text.value = "onDisposed() is called"
+                Log.d("DisposableEffect", "onDisposed is called")
+            }
+        }
+    }
+
+    if(startSideEffect) {
+        SideEffect {
+            text.value = "SideEffect() is called"
+            Log.d("SideEffect", "SideEffect is called")
+        }
+    }
+
     Column {
         TextWidget(title = "[Text]", text = text.value , tag = tag)
-
-
 
         Button(onClick = {
             startLaunchedEffect = true
@@ -62,13 +88,25 @@ fun DemoScreen() {
 
         Divider()
 
+        Button(onClick = { enableRememberUpdatedStated = true }
+        ) {
+            Text("Enable RememberUpdatedStated")
+        }
+
+        Button(onClick = { enableRememberUpdatedStated = false }
+        ) {
+            Text("Disable RememberUpdatedStated")
+        }
+
+        Divider()
+
         /* Not Allowed in Composition
         scope.launch {
             simulateSuspendFunction(text)
         }*/
 
+
         Button(onClick = {
-            job?.cancel()
             job = scope.launch {
                 simulateSuspendFunction(text)
             }
@@ -84,14 +122,36 @@ fun DemoScreen() {
 
         Divider()
 
-        Button(onClick = { enableRememberUpdatedStated = true }
-        ) {
-            Text("Enable RememberUpdatedStated")
+        Button(onClick = {
+            startDisposableEffect = true
+        }) {
+            Text("Start Disposable Effect")
         }
 
-        Button(onClick = { enableRememberUpdatedStated = false }
-        ) {
-            Text("Disable RememberUpdatedStated")
+        Button(onClick = {
+            startDisposableEffect = false
+        }) {
+            Text("Stop Disposable Effect")
+        }
+
+        Button(onClick = {
+            disposableEffectKey = !disposableEffectKey
+        }) {
+            Text("Toggle Disposable Effect Key")
+        }
+
+        Divider()
+
+        Button(onClick = {
+            startSideEffect = true
+        }) {
+            Text("Start Side Effect")
+        }
+
+        Button(onClick = {
+            startSideEffect = false
+        }) {
+            Text("Stop Side Effect")
         }
     }
 }
