@@ -16,31 +16,28 @@ import vtsen.hashnode.dev.composesideeffectsdemo.ui.common.tag
 @Composable
 fun DemoScreen() {
 
-    val text = remember { mutableStateOf("") }
+    val textState = remember { mutableStateOf("") }
+
+    LogCompositions(tag, "DemoScreen() function scope")
+
     var startLaunchedEffect by remember { mutableStateOf(false)}
     var launchedEffectKey by remember { mutableStateOf(true)}
+    if(startLaunchedEffect) {
+        LaunchedEffect(true) {
+            simulateSuspendFunction(textState)
+        }
+    }
+
     var enableRememberUpdatedStated by remember { mutableStateOf(false)}
+    if(enableRememberUpdatedStated) {
+        RememberUpdatedStated(textState.value)
+    }
 
     val scope = rememberCoroutineScope()
     var job: Job? by remember { mutableStateOf(null)}
 
     var startDisposableEffect by remember { mutableStateOf(false)}
     var disposableEffectKey by remember { mutableStateOf(true)}
-
-    var startSideEffect by remember { mutableStateOf(false)}
-
-    LogCompositions(tag, "DemoScreen() function scope")
-
-    if(startLaunchedEffect) {
-        LaunchedEffect(true) {
-            simulateSuspendFunction(text)
-        }
-    }
-
-    if(enableRememberUpdatedStated) {
-        RememberUpdatedStated(text.value)
-    }
-
     if(startDisposableEffect) {
         DisposableEffect(disposableEffectKey) {
 
@@ -48,25 +45,41 @@ fun DemoScreen() {
                 Thread.sleep(1000)
                 Log.d("DisposableEffect", "value: $value")
             }
-            text.value = "DisposableEffect() is called"
+            textState.value = "DisposableEffect() is called"
             Log.d("DisposableEffect", "DisposableEffect is called")
 
             onDispose {
-                text.value = "onDisposed() is called"
+                textState.value = "onDisposed() is called"
                 Log.d("DisposableEffect", "onDisposed is called")
             }
         }
     }
 
+    var startSideEffect by remember { mutableStateOf(false)}
     if(startSideEffect) {
         SideEffect {
-            text.value = "SideEffect() is called"
+            textState.value = "SideEffect() is called"
             Log.d("SideEffect", "SideEffect is called")
         }
     }
 
+    var startProduceState by remember { mutableStateOf(false)}
+    var textProduceState:State<String>? = null
+    if(startProduceState) {
+        textProduceState = produceState(initialValue = "") {
+            repeat(10000) { count ->
+                delay(1000)
+                Log.d(tag, "[produceState] Set value to $count")
+                value = count.toString()
+            }
+        }
+    }
+
     Column {
-        TextWidget(title = "[Text]", text = text.value , tag = tag)
+        TextWidget(title = "[TextState]", text = textState.value , tag = tag)
+        if(textProduceState != null) {
+            TextWidget(title = "[TextProduceState]", text = textProduceState.value, tag = tag)
+        }
 
         Button(onClick = {
             startLaunchedEffect = true
@@ -108,7 +121,7 @@ fun DemoScreen() {
 
         Button(onClick = {
             job = scope.launch {
-                simulateSuspendFunction(text)
+                simulateSuspendFunction(textState)
             }
         }) {
             Text("Start rememberCoroutineScope")
@@ -152,6 +165,20 @@ fun DemoScreen() {
             startSideEffect = false
         }) {
             Text("Stop Side Effect")
+        }
+
+        Divider()
+
+        Button(onClick = {
+            startProduceState = true
+        }) {
+            Text("Start Produce State")
+        }
+
+        Button(onClick = {
+            startProduceState = false
+        }) {
+            Text("Stop Produce State")
         }
     }
 }
