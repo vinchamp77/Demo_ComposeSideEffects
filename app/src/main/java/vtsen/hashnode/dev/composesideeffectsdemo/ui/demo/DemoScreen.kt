@@ -84,10 +84,25 @@ fun DemoScreen() {
         }
     }
 
+    var startDerivedStateOf by remember { mutableStateOf(false)}
+    var value1 by remember { mutableStateOf(true)}
+    var value2 by remember { mutableStateOf(false)}
+    var derivedValue:State<String>? = null
+    if(startDerivedStateOf) {
+        derivedValue = remember(value1) {
+            derivedStateOf {
+                "value!: $value1 + $value2"
+            }
+        }
+    }
+
     Column {
         TextWidget(title = "[TextState]", text = textState.value , tag = tag)
         if(textProduceState != null) {
             TextWidget(title = "[TextProduceState]", text = textProduceState.value, tag = tag)
+        }
+        if(derivedValue != null) {
+            TextWidget(title = "[DerivedValue]", text = derivedValue.value, tag = tag)
         }
 
         Button(onClick = {
@@ -189,6 +204,32 @@ fun DemoScreen() {
         }) {
             Text("Stop Produce State")
         }
+
+        Divider()
+
+        Button(onClick = {
+            startDerivedStateOf = true
+        }) {
+            Text("Start Derived State")
+        }
+
+        Button(onClick = {
+            startDerivedStateOf = false
+        }) {
+            Text("Stop Derived State")
+        }
+        Button(onClick = {
+            value1 = !value1
+        }) {
+            Text("Toggle value1")
+        }
+
+        Button(onClick = {
+            value2 = !value2
+        }) {
+            Text("Toggle value2")
+        }
+
     }
 }
 
