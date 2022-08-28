@@ -7,6 +7,7 @@ import androidx.compose.material.Divider
 import androidx.compose.material.Text
 import androidx.compose.runtime.*
 import kotlinx.coroutines.Job
+import kotlinx.coroutines.MainScope
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import vtsen.hashnode.dev.composesideeffectsdemo.ui.common.LogCompositions
@@ -23,7 +24,7 @@ fun DemoScreen() {
     var startLaunchedEffect by remember { mutableStateOf(false)}
     var launchedEffectKey by remember { mutableStateOf(true)}
     if(startLaunchedEffect) {
-        LaunchedEffect(true) {
+        LaunchedEffect(launchedEffectKey) {
             simulateSuspendFunction(textState)
         }
     }
@@ -67,10 +68,18 @@ fun DemoScreen() {
     var textProduceState:State<String>? = null
     if(startProduceState) {
         textProduceState = produceState(initialValue = "") {
-            repeat(10000) { count ->
-                delay(1000)
-                Log.d(tag, "[produceState] Set value to $count")
-                value = count.toString()
+
+            val produceStateJob = MainScope().launch {
+                repeat(10) { count ->
+                    delay(1000)
+                    Log.d("produceState", "Set value to $count")
+                    value = count.toString()
+                }
+            }
+
+            awaitDispose {
+                Log.d("produceState", "awaitDispose() is called")
+                produceStateJob.cancel()
             }
         }
     }
