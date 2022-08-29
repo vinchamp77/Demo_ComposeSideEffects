@@ -9,6 +9,7 @@ import androidx.compose.runtime.*
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.MainScope
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.launch
 import vtsen.hashnode.dev.composesideeffectsdemo.ui.common.LogCompositions
 import vtsen.hashnode.dev.composesideeffectsdemo.ui.common.TextWidget
@@ -92,6 +93,17 @@ fun DemoScreen() {
         derivedValue = remember(value1) {
             derivedStateOf {
                 "value!: $value1 + $value2"
+            }
+        }
+    }
+
+    var startSnapShotFlow by remember { mutableStateOf(false)}
+    if(startSnapShotFlow) {
+        LaunchedEffect(textState) {
+            val flow = snapshotFlow { textState.value }
+            flow.distinctUntilChanged()
+            flow.collect { text ->
+                Log.d("[SnapShotFlow]", "collecting flow text: $text")
             }
         }
     }
@@ -228,6 +240,20 @@ fun DemoScreen() {
             value2 = !value2
         }) {
             Text("Toggle value2")
+        }
+
+        Divider()
+
+        Button(onClick = {
+            startSnapShotFlow = true
+        }) {
+            Text("Start Snap Shot Flow")
+        }
+
+        Button(onClick = {
+            startSnapShotFlow = false
+        }) {
+            Text("Stop Snap Shot Flow")
         }
 
     }
